@@ -1,32 +1,44 @@
+import os
+import json
+import requests
 from unittest import TestCase
-
-from betamax import Betamax
 from mock import patch
 
 from mercadolibre import api
 from mercadolibre import http
-
-with Betamax.configure() as config:
-    config.cassette_library_dir = 'tests/fixtures/cassettes'
+from tests import TESTS_BASE_PATH
 
 
-APP_ID = '554056882653189'
-APP_SECRET = 'a8hWBhGCbgNXhMuHrZM8nmGXLRL6wpXc'
-ACCESS_TOKEN = "APP_USR-554056882653189-031816-50da07536429acf9d44587d7a488fa1b__H_F__-82365164"
+APP_ID = 'SOME_APP_ID'
+APP_SECRET = 'SOME_APP_SECRET'
+ACCESS_TOKEN = "SOME_VALID_ACCESS_TOKEN"
 
 
 class UserResourceTestCase(TestCase):
     def setUp(self):
         self.session = http.get_session()
 
-    def test_me(self):
-        """Should return the proper UserResource with my information.
+    def _build_mocked_response(self, status_code=200, content=None):
+        """ Returns a Response objects, opcionally with custom
+            content and status_code
         """
-        with Betamax(self.session) as vcr:
-            with patch.object(http, 'get_session') as m:
-                m.return_value = self.session
-                vcr.use_cassette('users')
-                ml = api.login(APP_ID, APP_SECRET, ACCESS_TOKEN)
-                me = ml.me()
-                self.assertEqual(str(me.id), '82365164')
-                self.assertEqual(me.site_id, 'MLA')
+        response = requests.Response()
+        response.status_code = status_code
+        if content is not None:
+            response._content = json.dumps(content)
+        return response
+
+    def test_me(self):
+        """Should return UserResource with current user data when me() method is called"""
+        ml = api.login(APP_ID, APP_SECRET, ACCESS_TOKEN)
+        with open(os.path.join(TESTS_BASE_PATH, 'fixtures/users_me.json')) as f:
+            fixture = json.loads(f.read())
+        with patch.object(requests.Session, 'get') as mocked:
+            mocked.return_value = self._build_mocked_response(content=fixture)
+            me = ml.me()
+        self.assertEqual(str(me.id), '107531232')
+        self.assertEqual(me.email, 'test.user@test.com')
+        self.assertEqual(me.nickname, 'TEST USER')
+        self.assertEqual(me.first_name, 'Test')
+        self.assertEqual(me.last_name, 'User')
+        self.assertEqual(me.site_id, 'MLA')

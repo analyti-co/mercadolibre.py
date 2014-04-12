@@ -40,6 +40,14 @@ class BaseResource(object):
 
     @classmethod
     def get(cls, id=None, params=None, access_token=None):
+        """ Performs a GET operation against ML API
+
+            :param id:
+            :param params:
+            :param access_token:
+
+            :returns:
+        """
         if id:
             return cls.get_detail(id, params=params, access_token=access_token)
         else:
