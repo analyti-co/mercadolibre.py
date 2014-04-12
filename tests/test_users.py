@@ -1,12 +1,11 @@
 import os
 import json
 import requests
-from unittest import TestCase
 from mock import patch
 
 from mercadolibre import api
 from mercadolibre import http
-from tests import TESTS_BASE_PATH
+from tests import TESTS_BASE_PATH, BaseTestCase
 
 
 APP_ID = 'SOME_APP_ID'
@@ -14,19 +13,7 @@ APP_SECRET = 'SOME_APP_SECRET'
 ACCESS_TOKEN = "SOME_VALID_ACCESS_TOKEN"
 
 
-class UserResourceTestCase(TestCase):
-    def setUp(self):
-        self.session = http.get_session()
-
-    def _build_mocked_response(self, status_code=200, content=None):
-        """ Returns a Response objects, opcionally with custom
-            content and status_code
-        """
-        response = requests.Response()
-        response.status_code = status_code
-        if content is not None:
-            response._content = json.dumps(content)
-        return response
+class UserResourceTestCase(BaseTestCase):
 
     def test_me(self):
         """Should return UserResource with current user data when me() method is called"""
